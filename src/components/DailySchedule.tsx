@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import AppointmentSummaryModal from './AppointmentSummaryModal';
 import {
   CheckCircle2,
   Clock,
@@ -53,6 +54,7 @@ const BEDS: BedCard[] = [
 /* ───── Component ───── */
 
 export default function DailySchedule() {
+  const [selectedAppt, setSelectedAppt] = useState<any>(null);
   const [sessions] = useState({ served: SERVED, upcoming: UPCOMING });
 
   return (
@@ -63,7 +65,7 @@ export default function DailySchedule() {
         <div className="ds-section">
           <div className="ds-section-label">Served Today</div>
           {sessions.served.map((s) => (
-            <div key={s.id} className="ds-session-card served">
+            <div key={s.id} className="ds-session-card served" onClick={() => setSelectedAppt(s)} style={{cursor:"pointer"}}>
               <div className="ds-time">
                 <span className="ds-time-value">{s.time}</span>
                 <span className="ds-time-period">{s.period}</span>
@@ -85,7 +87,7 @@ export default function DailySchedule() {
           {sessions.upcoming.map((s) => (
             <div
               key={s.id}
-              className={`ds-session-card ${s.status === 'now' ? 'now' : 'upcoming'}`}
+              className={`ds-session-card ${s.status === 'now' ? 'now' : 'upcoming'}`} onClick={() => setSelectedAppt(s)} style={{cursor:"pointer"}}
             >
               <div className="ds-time">
                 <span className={`ds-time-value ${s.status === 'now' ? 'now-time' : ''}`}>
@@ -154,6 +156,7 @@ export default function DailySchedule() {
           <Grid2x2 size={14} /> Full Ward View
         </button>
       </div>
+      <AppointmentSummaryModal appointment={selectedAppt} onClose={() => setSelectedAppt(null)} />
     </div>
   );
 }

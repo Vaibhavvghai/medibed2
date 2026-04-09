@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import FeatureSummaryModal from './FeatureSummaryModal';
 import {
   CalendarDays,
   Search,
@@ -54,10 +56,13 @@ const features = [
 ];
 
 export default function FeatureCards() {
+  const [activeFeature, setActiveFeature] = useState<string | null>(null);
+
   return (
-    <div className="feature-cards">
+    <>
+      <div className="feature-cards">
       {features.map((f) => (
-        <div className="feature-card" key={f.id} id={`feature-${f.id}`}>
+        <div className="feature-card" key={f.id} id={`feature-${f.id}`} onClick={() => setActiveFeature(f.id)} style={{cursor: 'pointer'}}>
           <div className="feature-card-icon">
             <f.Icon size={18} />
           </div>
@@ -69,5 +74,7 @@ export default function FeatureCards() {
         </div>
       ))}
     </div>
+      <FeatureSummaryModal featureId={activeFeature} onClose={() => setActiveFeature(null)} />
+    </>
   );
 }

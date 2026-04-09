@@ -11,7 +11,11 @@ import {
   Wind,
   Download,
   Pill,
-  Plus
+  Plus,
+  ClipboardList,
+  Dna,
+  Microscope,
+  Image as ImageIcon
 } from 'lucide-react';
 
 interface PatientDrawerProps {
@@ -29,6 +33,15 @@ interface Medication {
   color: 'teal' | 'gray';
 }
 
+interface MedicalRecord {
+  id: string;
+  category: 'blood' | 'imaging' | 'general';
+  date: string;
+  title: string;
+  lab: string;
+  status: 'Normal' | 'Abnormal' | 'Pending';
+}
+
 interface PrescriptionDoc {
   id: string;
   date: string;
@@ -43,7 +56,7 @@ export default function PatientDrawer({ isOpen, onClose }: PatientDrawerProps) {
     // Used to handle transitions
     if(isOpen) { /* Do nothing */ }
   }, [isOpen]);
-  const [activeTab, setActiveTab] = useState<'history' | 'prescriptions' | 'vitals' | 'appointments'>('history');
+  const [activeTab, setActiveTab] = useState<'history' | 'prescriptions' | 'vitals' | 'appointments' | 'records'>('history');
   const [rxFilter, setRxFilter] = useState<'all' | 'hospital' | 'external'>('all');
 
   // Virtual Prescription States
@@ -57,6 +70,15 @@ export default function PatientDrawer({ isOpen, onClose }: PatientDrawerProps) {
     { id: 'm2', name: 'Aspirin', dosage: '81mg', frequency: 'Once Daily', duration: 'Jan 05 — Dec 05', status: 'Active', color: 'teal' },
     { id: 'm3', name: 'Amoxicillin', dosage: '500mg', frequency: 'Every 8 hours', duration: 'Oct 10 — Oct 17', status: 'Completed', color: 'gray' }
   ]);
+
+  const [patientRecords, setPatientRecords] = useState<MedicalRecord[]>([
+    { id: 'r1', category: 'blood', date: 'Oct 25, 2026', title: 'Complete Blood Count (CBC)', lab: 'MediBed Central Lab', status: 'Abnormal' },
+    { id: 'r2', category: 'blood', date: 'Oct 25, 2026', title: 'Lipid Panel', lab: 'MediBed Central Lab', status: 'Normal' },
+    { id: 'r3', category: 'imaging', date: 'Oct 24, 2026', title: 'Chest X-Ray (AP/PA)', lab: 'Radiology Dept', status: 'Normal' },
+    { id: 'r4', category: 'general', date: 'Aug 12, 2026', title: 'Cardiology Assessment Form', lab: 'Cardiology Unit', status: 'Normal' },
+  ]);
+  
+  const [recordFilter, setRecordFilter] = useState<'all' | 'blood' | 'imaging' | 'general'>('all');
 
   const [prescriptionDocs, setPrescriptionDocs] = useState<PrescriptionDoc[]>([
     { id: 'd1', date: 'Aug 12, 2026', name: 'Cardiology Scripts.pdf', doctor: 'Dr. Sarah Jenkins', hospital: 'City Hospital', type: 'external' },
@@ -145,6 +167,9 @@ export default function PatientDrawer({ isOpen, onClose }: PatientDrawerProps) {
           <button className={`p-tab ${activeTab === 'appointments' ? 'active' : ''}`} onClick={() => setActiveTab('appointments')}>
             <Calendar size={14} /> Past Appointments
           </button>
+          <button className={`p-tab ${activeTab === 'records' ? 'active' : ''}`} onClick={() => setActiveTab('records')}>
+            <ClipboardList size={14} /> Lab & Reports
+          </button>
         </div>
 
         {/* Content Area */}
@@ -179,84 +204,66 @@ export default function PatientDrawer({ isOpen, onClose }: PatientDrawerProps) {
 
               {activeTab === 'prescriptions' && (
             <div className="p-tab-rx">
-              <div className="p-rx-header-row mb-4">
-                <h4 className="p-sub-title mb-0">Prescription Management</h4>
+              <div className="p-rx-header-row mb-4" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 className="p-sub-title mb-0">Medication Management</h4>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Active and finalized prescription scripts.</p>
+                </div>
                 <button 
                   className="pd-register-btn" 
                   onClick={() => setIsNewRxModalOpen(true)}
-                  style={{ padding: '8px 16px' }}
+                  style={{ padding: '8px 16px', background: 'var(--purple-primary)', color: 'white', borderRadius: '8px', border: 'none', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 600 }}
                 >
-                  <Plus size={14} /> New Prescription
+                  <Plus size={14} /> Issue Script
                 </button>
               </div>
               
-              <div className="p-rx-header-row">
-                <h4 className="p-sub-title mb-0" style={{fontSize: '13px', color: 'var(--text-muted)'}}>Record Timeline</h4>
-                <div className="p-rx-filters">
-                  <button className={`p-rx-tag ${rxFilter === 'all' ? 'active' : ''}`} onClick={() => setRxFilter('all')}>All</button>
-                  <button className={`p-rx-tag ${rxFilter === 'hospital' ? 'active' : ''}`} onClick={() => setRxFilter('hospital')}>This Hospital</button>
-                  <button className={`p-rx-tag ${rxFilter === 'external' ? 'active' : ''}`} onClick={() => setRxFilter('external')}>External</button>
-                </div>
+              <div className="p-rx-filters" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px', marginBottom: '20px', display: 'flex', gap: '8px' }}>
+                <button className={`p-rx-tag ${rxFilter === 'all' ? 'active' : ''}`} onClick={() => setRxFilter('all')} style={{ background: rxFilter === 'all' ? 'var(--purple-primary)' : 'rgba(255,255,255,0.05)', color: rxFilter === 'all' ? 'white' : 'var(--text-muted)', padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>All Scripts</button>
+                <button className={`p-rx-tag ${rxFilter === 'hospital' ? 'active' : ''}`} onClick={() => setRxFilter('hospital')} style={{ background: rxFilter === 'hospital' ? 'var(--purple-primary)' : 'rgba(255,255,255,0.05)', color: rxFilter === 'hospital' ? 'white' : 'var(--text-muted)', padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>Internal</button>
+                <button className={`p-rx-tag ${rxFilter === 'external' ? 'active' : ''}`} onClick={() => setRxFilter('external')} style={{ background: rxFilter === 'external' ? 'var(--purple-primary)' : 'rgba(255,255,255,0.05)', color: rxFilter === 'external' ? 'white' : 'var(--text-muted)', padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>External Files</button>
               </div>
 
-              <div className="p-rx-timeline">
+              <div className="p-rx-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
                 {prescriptionDocs
                   .filter(doc => rxFilter === 'all' || doc.type === (rxFilter === 'external' ? 'external' : 'internal'))
                   .map(doc => (
-                  <div key={doc.id} className="p-rxt-item">
-                    <div className="p-rxt-date">{doc.date}</div>
-                    <div className={`p-rxt-card ${doc.type}`}>
-                      <div className="p-rxt-thumb">
-                        <FileText size={20} className={doc.type === 'external' ? 'text-teal-400' : 'text-purple-400'} />
-                      </div>
-                      <div className="p-rxt-details">
-                        <h5>{doc.name}</h5>
-                        <div className="p-rxt-meta">
-                          <span className="doc-name">{doc.doctor}</span>
-                          <span className="dot">•</span>
-                          <span className={`hosp-name ${doc.type === 'external' ? 'text-teal-400' : ''}`}>
-                            {doc.hospital} {doc.type === 'external' && <span className="p-badge-ext">External</span>}
-                          </span>
+                  <div key={doc.id} className={`p-rxt-grid-card ${doc.type}`} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: doc.type === 'external' ? 'teal' : 'var(--purple-primary)' }}></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: doc.type === 'external' ? 'rgba(20, 184, 166, 0.1)' : 'rgba(139, 92, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <FileText size={20} color={doc.type === 'external' ? '#14b8a6' : '#8b5cf6'} />
+                        </div>
+                        <div>
+                          <h5 style={{ fontSize: '14px', fontWeight: 600, color: 'white', margin: 0, marginBottom: '2px' }}>{doc.name}</h5>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{doc.date}</span>
                         </div>
                       </div>
-                      <button className="p-rxt-dl"><Download size={16} /> View</button>
+                      <span style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', padding: '4px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>
+                        {doc.type}
+                      </span>
+                    </div>
+                    
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        <span style={{ width: '60px', color: 'var(--text-muted)' }}>Doctor:</span>
+                        <span style={{ fontWeight: 500, color: '#e2e8f0' }}>{doc.doctor}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        <span style={{ width: '60px', color: 'var(--text-muted)' }}>Location:</span>
+                        <span style={{ fontWeight: 500, color: '#e2e8f0' }}>{doc.hospital}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 'auto', paddingTop: '12px', display: 'flex', gap: '8px' }}>
+                      <button style={{ flex: 1, padding: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', borderRadius: '6px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'} onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}>
+                        <Download size={14} /> Download PDF
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
-
-              <div className="p-rx-divider"></div>
-
-              <h4 className="p-sub-title">Active Medicines</h4>
-              <table className="p-meds-table">
-                <thead>
-                  <tr>
-                    <th>Medicine</th>
-                    <th>Dosage</th>
-                    <th>Frequency</th>
-                    <th>Duration</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeMeds.map(med => (
-                    <tr key={med.id}>
-                      <td>
-                        <div className="p-med-cell">
-                          <Pill size={14} className={med.color === 'teal' ? 'text-teal-400' : 'text-gray-400'} />
-                          <span>{med.name}</span>
-                        </div>
-                      </td>
-                      <td>{med.dosage}</td>
-                      <td>{med.frequency}</td>
-                      <td>{med.duration}</td>
-                      <td>
-                        <span className={`p-status-pill ${med.status.toLowerCase()}`}>{med.status}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           )}
 
@@ -300,12 +307,150 @@ export default function PatientDrawer({ isOpen, onClose }: PatientDrawerProps) {
                   <div className="p-vital-trend warning">Borderline</div>
                 </div>
               </div>
+
+              <div className="p-rx-divider"></div>
+
+              <h4 className="p-sub-title">Active Medicines</h4>
+              <table className="p-meds-table">
+                <thead>
+                  <tr>
+                    <th>Medicine</th>
+                    <th>Dosage</th>
+                    <th>Frequency</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeMeds.map(med => (
+                    <tr key={med.id}>
+                      <td>
+                        <div className="p-med-cell">
+                          <Pill size={14} className={med.color === 'teal' ? 'text-teal-400' : 'text-gray-400'} />
+                          <span>{med.name}</span>
+                        </div>
+                      </td>
+                      <td>{med.dosage}</td>
+                      <td>{med.frequency}</td>
+                      <td>{med.duration}</td>
+                      <td>
+                        <span className={`p-status-pill ${med.status.toLowerCase()}`}>{med.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 
+
+
+          {activeTab === 'records' && (
+            <div className="p-tab-records">
+              <div className="p-rx-header-row mb-4" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div>
+                  <h4 className="p-sub-title mb-0">Lab & Clinical Reports</h4>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Review blood work, imaging results, and summaries.</p>
+                </div>
+                <div className="p-rx-filters" style={{ display: 'flex', gap: '8px' }}>
+                  <button className={`p-rx-tag ${recordFilter === 'all' ? 'active' : ''}`} onClick={() => setRecordFilter('all')} style={{ background: recordFilter === 'all' ? 'var(--purple-primary)' : 'rgba(255,255,255,0.05)', color: recordFilter === 'all' ? 'white' : 'var(--text-muted)', padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>All</button>
+                  <button className={`p-rx-tag ${recordFilter === 'blood' ? 'active' : ''}`} onClick={() => setRecordFilter('blood')} style={{ background: recordFilter === 'blood' ? '#ef4444' : 'rgba(255,255,255,0.05)', color: recordFilter === 'blood' ? 'white' : 'var(--text-muted)', padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>Blood</button>
+                  <button className={`p-rx-tag ${recordFilter === 'imaging' ? 'active' : ''}`} onClick={() => setRecordFilter('imaging')} style={{ background: recordFilter === 'imaging' ? '#14b8a6' : 'rgba(255,255,255,0.05)', color: recordFilter === 'imaging' ? 'white' : 'var(--text-muted)', padding: '6px 12px', borderRadius: '6px', border: 'none', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>Imaging</button>
+                </div>
+              </div>
+
+              <div className="records-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {patientRecords
+                  .filter(rec => recordFilter === 'all' || rec.category === recordFilter)
+                  .map(rec => (
+                  <div key={rec.id} className="record-card hover-glow" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '16px', transition: 'all 0.2s', cursor: 'pointer' }}>
+                    <div style={{ width: '48px', height: '48px', flexShrink: 0, borderRadius: '12px', background: rec.category === 'blood' ? 'rgba(239, 68, 68, 0.1)' : rec.category === 'imaging' ? 'rgba(20, 184, 166, 0.1)' : 'rgba(139, 92, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {rec.category === 'blood' ? <Dna size={24} color="#ef4444" /> : rec.category === 'imaging' ? <ImageIcon size={24} color="#14b8a6" /> : <Microscope size={24} color="#8b5cf6" />}
+                    </div>
+                    
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h5 style={{ fontSize: '15px', fontWeight: 600, color: 'white', margin: 0, marginBottom: '4px' }}>{rec.title}</h5>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{rec.date}</span>
+                        <span style={{ fontSize: '10px' }}>•</span>
+                        <span>{rec.lab}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <span style={{ 
+                        fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', padding: '4px 10px', borderRadius: '20px', 
+                        background: rec.status === 'Abnormal' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.1)', 
+                        color: rec.status === 'Abnormal' ? '#fca5a5' : '#34d399' 
+                      }}>
+                        {rec.status}
+                      </span>
+                      <button style={{ background: 'none', border: 'none', color: 'var(--purple-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        <Download size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {activeTab === 'appointments' && (
             <div className="p-tab-appt">
-              <p className="p-placeholder-text">Past appointment history will appear here.</p>
+              <div className="p-appt-list">
+                <div className="p-rxt-item">
+                  <div className="p-rxt-date">Oct 12, 2026</div>
+                  <div className="p-rxt-card internal">
+                    <div className="p-rxt-thumb">
+                      <Calendar size={20} className="text-purple-400" />
+                    </div>
+                    <div className="p-rxt-details">
+                      <h5>Follow-up Consultation</h5>
+                      <div className="p-rxt-meta">
+                        <span className="doc-name">Dr. Aris Thorne</span>
+                        <span className="dot">•</span>
+                        <span className="hosp-name">MediBed</span>
+                      </div>
+                    </div>
+                    <span className="p-status-pill completed" style={{background: 'rgba(16, 185, 129, 0.2)', color: '#34d399'}}>Completed</span>
+                  </div>
+                </div>
+
+                <div className="p-rxt-item">
+                  <div className="p-rxt-date">Aug 05, 2026</div>
+                  <div className="p-rxt-card external">
+                    <div className="p-rxt-thumb">
+                      <Calendar size={20} className="text-teal-400" />
+                    </div>
+                    <div className="p-rxt-details">
+                      <h5>Cardiology Screening</h5>
+                      <div className="p-rxt-meta">
+                        <span className="doc-name">Dr. Sarah Jenkins</span>
+                        <span className="dot">•</span>
+                        <span className="hosp-name text-teal-400">City Hospital <span className="p-badge-ext">External</span></span>
+                      </div>
+                    </div>
+                    <span className="p-status-pill completed" style={{background: 'rgba(16, 185, 129, 0.2)', color: '#34d399'}}>Completed</span>
+                  </div>
+                </div>
+
+                <div className="p-rxt-item">
+                  <div className="p-rxt-date">Jan 18, 2025</div>
+                  <div className="p-rxt-card internal">
+                    <div className="p-rxt-thumb">
+                      <Calendar size={20} className="text-purple-400" />
+                    </div>
+                    <div className="p-rxt-details">
+                      <h5>Initial Assessment</h5>
+                      <div className="p-rxt-meta">
+                        <span className="doc-name">Dr. Aris Thorne</span>
+                        <span className="dot">•</span>
+                        <span className="hosp-name">MediBed</span>
+                      </div>
+                    </div>
+                    <span className="p-status-pill completed" style={{background: 'rgba(16, 185, 129, 0.2)', color: '#34d399'}}>Completed</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

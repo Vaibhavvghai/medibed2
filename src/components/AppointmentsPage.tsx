@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import DailySchedule from './DailySchedule';
 import AvailabilityCalendar from './AvailabilityCalendar';
+import InteractivePlanner from './InteractivePlanner';
+import AppointmentsBedLocator from './AppointmentsBedLocator';
 
 export default function AppointmentsPage() {
-  const [activeTab, setActiveTab] = useState<'daily' | 'availability'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'availability' | 'visual' | 'locator'>('daily');
 
   return (
     <div className="appt-page">
@@ -25,11 +27,25 @@ export default function AppointmentsPage() {
           >
             Availability
           </button>
+          <button
+            className={`appt-tab ${activeTab === 'visual' ? 'active' : ''}`}
+            onClick={() => setActiveTab('visual')}
+          >
+            Visual Planner
+          </button>
+          <button
+            className={`appt-tab ${activeTab === 'locator' ? 'active' : ''}`}
+            onClick={() => setActiveTab('locator')}
+          >
+            Bed Locator
+          </button>
         </div>
       </div>
 
       {activeTab === 'daily' && <DailySchedule />}
       {activeTab === 'availability' && <AvailabilityCalendar />}
+      {activeTab === 'visual' && <InteractivePlanner />}
+      {activeTab === 'locator' && <AppointmentsBedLocator />}
     </div>
   );
 }

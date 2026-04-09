@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import AppointmentSummaryModal from './AppointmentSummaryModal';
 import {
   Search,
   CalendarDays,
@@ -6,6 +7,8 @@ import {
   ChevronUp,
   ChevronDown,
   Filter,
+  Expand,
+  Shrink,
 } from 'lucide-react';
 
 /* ───── Data ───── */
@@ -30,35 +33,35 @@ interface Bed {
 }
 
 const APPOINTMENTS: Appointment[] = [
-  { id: 'a1', patient: 'Julian S. Vance', age: 42, time: '08:00 AM', status: 'In Progress', bedId: '301-A', ward: 'Ward 4A' },
-  { id: 'a2', patient: 'Elias Vancamp', age: 58, time: '08:30 AM', status: 'Pending', bedId: '302-B', ward: 'Ward 4A' },
-  { id: 'a3', patient: 'Clara Mendez', age: 31, time: '09:00 AM', status: 'Done', bedId: '401-A', ward: 'Ward 4B' },
-  { id: 'a4', patient: 'Ravi Kapoor', age: 67, time: '09:30 AM', status: 'Pending', bedId: '402-A', ward: 'Ward 4B' },
-  { id: 'a5', patient: 'Sofia Laurent', age: 28, time: '10:00 AM', status: 'In Progress', bedId: '303-A', ward: 'Ward 4A' },
-  { id: 'a6', patient: 'Marcus Chen', age: 45, time: '10:30 AM', status: 'Pending', bedId: '403-B', ward: 'Ward 4B' },
-  { id: 'a7', patient: 'Amara Osei', age: 53, time: '11:00 AM', status: 'Done', bedId: '501-A', ward: 'Ward 4C' },
-  { id: 'a8', patient: 'Dmitri Volkov', age: 36, time: '11:30 AM', status: 'Pending', bedId: '502-B', ward: 'Ward 4C' },
-  { id: 'a9', patient: 'Lena Fischer', age: 49, time: '12:00 PM', status: 'In Progress', bedId: '304-A', ward: 'Ward 4A' },
-  { id: 'a10', patient: 'Kai Tanaka', age: 24, time: '12:30 PM', status: 'Pending', bedId: '503-A', ward: 'Ward 4C' },
+  { id: 'a1', patient: 'Julian S. Vance', age: 42, time: '08:00 AM', status: 'In Progress', bedId: 'ICU-101', ward: 'ICU (Intensive Care)' },
+  { id: 'a2', patient: 'Elias Vancamp', age: 58, time: '08:30 AM', status: 'Pending', bedId: 'ICU-102', ward: 'ICU (Intensive Care)' },
+  { id: 'a3', patient: 'Clara Mendez', age: 31, time: '09:00 AM', status: 'Done', bedId: 'GEN-A01', ward: 'General Ward A' },
+  { id: 'a4', patient: 'Ravi Kapoor', age: 67, time: '09:30 AM', status: 'Pending', bedId: 'GEN-A02', ward: 'General Ward A' },
+  { id: 'a5', patient: 'Sofia Laurent', age: 28, time: '10:00 AM', status: 'In Progress', bedId: 'ICU-103', ward: 'ICU (Intensive Care)' },
+  { id: 'a6', patient: 'Marcus Chen', age: 45, time: '10:30 AM', status: 'Pending', bedId: 'GEN-A03', ward: 'General Ward A' },
+  { id: 'a7', patient: 'Amara Osei', age: 53, time: '11:00 AM', status: 'Done', bedId: 'GEN-B01', ward: 'General Ward B' },
+  { id: 'a8', patient: 'Dmitri Volkov', age: 36, time: '11:30 AM', status: 'Pending', bedId: 'GEN-B02', ward: 'General Ward B' },
+  { id: 'a9', patient: 'Lena Fischer', age: 49, time: '12:00 PM', status: 'In Progress', bedId: 'ICU-104', ward: 'ICU (Intensive Care)' },
+  { id: 'a10', patient: 'Kai Tanaka', age: 24, time: '12:30 PM', status: 'Pending', bedId: 'GEN-B03', ward: 'General Ward B' },
 ];
 
-const WARDS = ['Ward 4A', 'Ward 4B', 'Ward 4C'];
+const WARDS = ['ICU (Intensive Care)', 'General Ward A', 'General Ward B', 'Maternity', 'Pediatrics'];
 
 function generateBeds(): Bed[] {
   const beds: Bed[] = [];
   const occupiedMap: Record<string, string> = {};
   APPOINTMENTS.forEach((a) => { occupiedMap[a.bedId] = a.patient; });
 
+  if (!occupiedMap['MAT-201']) occupiedMap['MAT-201'] = 'Emily Blunt';
+  if (!occupiedMap['PED-304']) occupiedMap['PED-304'] = 'Timmy Turner';
+  if (!occupiedMap['GEN-B05']) occupiedMap['GEN-B05'] = 'Jane Smith';
+
   const wardRooms: Record<string, string[][]> = {
-    'Ward 4A': [
-      ['301-A', '301-B'], ['302-A', '302-B'], ['303-A', '303-B'], ['304-A', '304-B'],
-    ],
-    'Ward 4B': [
-      ['401-A', '401-B'], ['402-A', '402-B'], ['403-A', '403-B'], ['404-A', '404-B'],
-    ],
-    'Ward 4C': [
-      ['501-A', '501-B'], ['502-A', '502-B'], ['503-A', '503-B'], ['504-A', '504-B'],
-    ],
+    'ICU (Intensive Care)': [['ICU-101', 'ICU-102', 'ICU-103', 'ICU-104'], ['ICU-105', 'ICU-106', 'ICU-107']],
+    'General Ward A': [['GEN-A01', 'GEN-A02'], ['GEN-A03', 'GEN-A04'], ['GEN-A05', 'GEN-A06'], ['GEN-A07', 'GEN-A08']],
+    'General Ward B': [['GEN-B01', 'GEN-B02'], ['GEN-B03', 'GEN-B04'], ['GEN-B05', 'GEN-B06']],
+    'Maternity': [['MAT-201', 'MAT-202'], ['MAT-203', 'MAT-204']],
+    'Pediatrics': [['PED-301', 'PED-302', 'PED-303'], ['PED-304', 'PED-305']]
   };
 
   for (const [ward, rooms] of Object.entries(wardRooms)) {
@@ -105,6 +108,8 @@ export default function AppointmentsBedLocator() {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [highlightedBed, setHighlightedBed] = useState<string | null>(null);
   const [hoveredBed, setHoveredBed] = useState<string | null>(null);
+  const [isFullView, setIsFullView] = useState(false);
+  const [selectedAppt, setSelectedAppt] = useState<any>(null);
 
   /* ── Sorting ── */
   function toggleSort(key: SortKey) {
@@ -240,6 +245,7 @@ export default function AppointmentsBedLocator() {
       {/* ── Split Panel ── */}
       <div className="abl-split">
         {/* LEFT — Appointments table */}
+        {!isFullView && (
         <div className="abl-left">
           <div className="abl-left-header">
             <h2 className="section-title">Appointments</h2>
@@ -270,6 +276,8 @@ export default function AppointmentsBedLocator() {
                 {appointments.map((a) => (
                   <tr
                     key={a.id}
+                    onClick={() => setSelectedAppt(a)}
+                    style={{cursor:"pointer"}}
                     className={highlightedBed === a.bedId ? 'row-highlight' : ''}
                   >
                     <td className="td-patient">{a.patient}</td>
@@ -284,7 +292,7 @@ export default function AppointmentsBedLocator() {
                     <td>
                       <button
                         className="locate-btn"
-                        onClick={() => handleLocate(a.bedId, a.ward)}
+                        onClick={(e) => { e.stopPropagation(); handleLocate(a.bedId, a.ward); }}
                       >
                         <MapPin size={13} /> Locate
                       </button>
@@ -302,11 +310,20 @@ export default function AppointmentsBedLocator() {
             </table>
           </div>
         </div>
+        )}
 
         {/* RIGHT — Bed Map */}
         <div className="abl-right">
           <div className="abl-right-header">
-            <h2 className="section-title">Bed Map</h2>
+            <h2 className="section-title" style={{display:'flex', alignItems:'center', gap:'10px'}}>
+              Bed Map
+              <button 
+                onClick={() => setIsFullView(!isFullView)} 
+                style={{display:'flex', alignItems:'center', gap:'6px', background:'var(--purple-primary)', color:'white', border:'none', padding:'4px 10px', borderRadius:'6px', cursor:'pointer', fontSize:'12px'}}
+              >
+                {isFullView ? <><Shrink size={14} /> Split View</> : <><Expand size={14} /> Full Ward View</>}
+              </button>
+            </h2>
             <div className="bed-legend">
               <span className="legend-item">
                 <span className="legend-dot available" /> Available
@@ -340,15 +357,26 @@ export default function AppointmentsBedLocator() {
                         <div
                           key={bed.id}
                           className={bedClass}
+                          style={isFullView ? { height: '80px', width: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' } : {}}
                           onMouseEnter={() => setHoveredBed(bed.id)}
                           onMouseLeave={() => setHoveredBed(null)}
                           onClick={() => setHighlightedBed(bed.id === highlightedBed ? null : bed.id)}
                         >
-                          <span className="bed-room">{bed.label}</span>
-                          {bed.occupied && isHovered && (
+                          <span className="bed-room" style={isFullView ? {fontSize: '14px', fontWeight: 'bold', marginBottom: '4px'} : {}}>{bed.label}</span>
+                          
+                          {/* Hover Tooltip when not in full view */}
+                          {!isFullView && bed.occupied && isHovered && (
                             <div className="bed-tooltip">{bed.patientName}</div>
                           )}
-                          {isHighlighted && bed.patientName && (
+
+                          {/* Persistent text when IN full view */}
+                          {isFullView && bed.occupied && (
+                            <div style={{fontSize: '11px', color: 'rgba(255,255,255,0.9)', textAlign: 'center', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '4px', maxWidth: '90%', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap'}}>
+                              {bed.patientName}
+                            </div>
+                          )}
+
+                          {isHighlighted && bed.patientName && !isFullView && (
                             <span className="bed-patient-tag">{bed.patientName}</span>
                           )}
                         </div>
@@ -360,7 +388,8 @@ export default function AppointmentsBedLocator() {
             })}
           </div>
         </div>
-      </div>
+        </div>
+      <AppointmentSummaryModal appointment={selectedAppt} onClose={() => setSelectedAppt(null)} />
     </div>
   );
 }

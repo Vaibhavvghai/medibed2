@@ -2,7 +2,7 @@ import { FlaskConical, TriangleAlert, CircleCheckBig } from 'lucide-react';
 
 const stats = [
   {
-    label: 'Pending Lab',
+    label: 'Pending Appointment',
     value: '12',
     iconColor: 'purple' as const,
     Icon: FlaskConical,
@@ -10,7 +10,7 @@ const stats = [
     footerText: 'Updated 2m ago',
   },
   {
-    label: 'Stat Order',
+    label: 'Urgency Order',
     value: '03',
     valueClass: 'purple-text',
     iconColor: 'amber' as const,

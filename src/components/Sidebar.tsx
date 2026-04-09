@@ -2,15 +2,21 @@ import {
   LayoutDashboard,
   CalendarDays,
   Users,
+  Pill,
   ClockArrowUp,
   Settings,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
   Cross,
 } from 'lucide-react';
 
 interface SidebarProps {
   activeNav: string;
   onNavChange: (nav: string) => void;
+  onLogout: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 const mainNavItems = [
@@ -18,14 +24,20 @@ const mainNavItems = [
   { id: 'appointments', label: 'Appointments', icon: CalendarDays },
   { id: 'patients', label: 'Patients', icon: Users },
   { id: 'patient-history', label: 'Patient History', icon: ClockArrowUp },
+  { id: 'prescriptions', label: 'Prescriptions', icon: Pill },
 ];
 
-export default function Sidebar({ activeNav, onNavChange }: SidebarProps) {
+export default function Sidebar({ activeNav, onNavChange, onLogout, isCollapsed, onToggleCollapse }: SidebarProps) {
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       {/* Logo */}
       <div className="sidebar-logo">
-        <div className="logo-icon">
+        {onToggleCollapse && (
+        <div className="sidebar-collapse-btn" onClick={onToggleCollapse}>
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </div>
+      )}
+      <div className="logo-icon">
           <Cross size={18} />
         </div>
         <h1>MediBed</h1>
@@ -40,7 +52,7 @@ export default function Sidebar({ activeNav, onNavChange }: SidebarProps) {
             onClick={() => onNavChange(item.id)}
           >
             <item.icon size={18} className="nav-icon" />
-            {item.label}
+            <span className="sidebar-nav-text">{item.label}</span>
           </button>
         ))}
       </nav>
@@ -52,11 +64,11 @@ export default function Sidebar({ activeNav, onNavChange }: SidebarProps) {
           onClick={() => onNavChange('settings')}
         >
           <Settings size={18} className="nav-icon" />
-          Settings
+          <span className="sidebar-nav-text">Settings</span>
         </button>
-        <button className="sidebar-nav-item logout-item">
+        <button className="sidebar-nav-item logout-item" onClick={onLogout}>
           <LogOut size={18} className="nav-icon" />
-          Logout
+          <span className="sidebar-nav-text">Logout</span>
         </button>
       </div>
 

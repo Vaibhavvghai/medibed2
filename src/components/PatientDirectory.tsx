@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { Search, ArrowUpDown, Activity, MoreHorizontal, ChevronRight, Plus, X, ClipboardList } from 'lucide-react';
+import { Search, ArrowUpDown, Activity, MoreHorizontal, ChevronRight, Plus, X, ClipboardList, CheckCircle, XCircle } from 'lucide-react';
+
+interface AppointmentRequest {
+  id: string;
+  name: string;
+  age: number;
+  gender: string;
+  date: string;
+  condition: string;
+  bloodType: string;
+}
 
 interface Patient {
   id: string;
@@ -109,7 +119,54 @@ export default function PatientDirectory() {
     name: '', age: '', gender: 'Male', bloodType: 'O+', status: 'OBSERVATION', condition: ''
   });
 
-  const tabs = ['ALL', 'INPATIENT', 'OUTPATIENT', 'OBSERVATION'];
+  const tabs = ['ALL', 'INPATIENT', 'OUTPATIENT', 'OBSERVATION', 'REQUESTS'];
+  const [requests, setRequests] = useState<AppointmentRequest[]>([
+    {
+      id: 'REQ-101',
+      name: 'Oliver Queen',
+      age: 39,
+      gender: 'Male',
+      date: 'Pending: Tomorrow Morning',
+      condition: 'Experiencing severe migraines and blurred vision for the past 48 hours.',
+      bloodType: 'B-'
+    },
+    {
+      id: 'REQ-102',
+      name: 'Diana Prince',
+      age: 32,
+      gender: 'Female',
+      date: 'Pending: Next Week',
+      condition: 'Routine sports physical and joint assessment requested.',
+      bloodType: 'O+'
+    }
+  ]);
+
+  const handleApproveRequest = (req: AppointmentRequest) => {
+    const initials = req.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2) || 'XX';
+    const colors = ['#8b5cf6', '#ef4444', '#14b8a6', '#3b82f6', '#ec4899', '#f59e0b'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    const newPatient: Patient = {
+      id: `#PX-${Math.floor(1000 + Math.random() * 9000)}`,
+      name: req.name,
+      initials,
+      avatarColor: randomColor,
+      age: req.age,
+      gender: req.gender,
+      status: 'OUTPATIENT',
+      spo2: 98,
+      bpm: 72,
+      admission: 'Upcoming',
+      location: 'Clinic • Scheduled',
+      bloodType: req.bloodType,
+      condition: req.condition
+    };
+    setPatients([newPatient, ...patients]);
+    setRequests(requests.filter(r => r.id !== req.id));
+  };
+
+  const handleDeclineRequest = (id: string) => {
+    setRequests(requests.filter(r => r.id !== id));
+  };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,6 +235,41 @@ export default function PatientDirectory() {
         </div>
       </div>
 
+            {/* Content Area */}
+      {activeTab === 'REQUESTS' ? (
+        <div className="pd-requests-container">
+          {requests.length === 0 ? (
+            <div className="pd-empty-state">
+              <ClipboardList size={48} style={{margin: '0 auto 16px', opacity: 0.3}} />
+              <h3>No Pending Requests</h3>
+              <p>You have reviewed all incoming patient appointments.</p>
+            </div>
+          ) : (
+            requests.map(req => (
+              <div key={req.id} className="pd-request-card">
+                <div className="pd-req-info">
+                  <div className="pd-req-header">
+                    <span className="pd-req-name">{req.name}</span>
+                    <span className="dot">•</span>
+                    <span className="pd-req-meta">{req.id} <span className="dot">•</span> {req.age} yrs {req.gender} <span className="dot">•</span> Blood: {req.bloodType}</span>
+                  </div>
+                  <div className="pd-req-date">{req.date}</div>
+                  <div className="pd-req-cond">{req.condition}</div>
+                </div>
+                <div className="pd-req-actions">
+                  <button className="pd-req-btn decline" onClick={() => handleDeclineRequest(req.id)}>
+                    <XCircle size={16} /> Decline
+                  </button>
+                  <button className="pd-req-btn approve" onClick={() => handleApproveRequest(req)}>
+                    <CheckCircle size={16} /> Approve & Register
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        <>
       {/* Patient Table */}
       <div className="pd-table-card">
         <table className="pd-table">
@@ -266,6 +358,9 @@ export default function PatientDirectory() {
           </tbody>
         </table>
       </div>
+
+              </>
+      )}
 
       {/* --- MODALS --- */}
 
